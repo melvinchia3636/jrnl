@@ -1,5 +1,5 @@
 <center>
-  <h1 align="center">📓 jrnl — Journal Scanner Suite</h1>
+  <h1 align="center">📓 jrnl - Journal Scanner Suite</h1>
   <p align="center">A unified, zero-prompt CLI suite for scanning, OCR transcribing, organizing, and archiving physical handwritten journals into cryptographically verified .jrnl packages.</p>
 </center>
 

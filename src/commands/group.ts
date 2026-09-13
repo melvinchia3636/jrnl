@@ -29,7 +29,12 @@ export function organizeJournalFiles(dir: string): GroupResult {
 
   for (const f of files) {
     const lower = f.toLowerCase();
-    if (lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".webp")) {
+    if (
+      lower.endsWith(".png") ||
+      lower.endsWith(".jpg") ||
+      lower.endsWith(".jpeg") ||
+      lower.endsWith(".webp")
+    ) {
       renameSync(join(dir, f), join(imagesDir, f));
       movedImages++;
     } else if (lower.endsWith(".txt")) {
@@ -50,15 +55,19 @@ export type GroupOptions = {
 };
 
 export async function groupCommand(options: GroupOptions = {}): Promise<void> {
-  intro(pc.bgBlue(pc.black(" JRNL — Organizer ")));
+  intro(pc.bgBlue(pc.black(" JRNL - Organizer ")));
 
   const dir = getJournalDir(options.dir);
   log.info(`Target folder: ${pc.dim(dir)}`);
 
   const result = organizeJournalFiles(dir);
 
-  log.step(`Moved ${pc.cyan(String(result.movedImages))} image(s) ➔ ${pc.bold("images/")}`);
-  log.step(`Moved ${pc.cyan(String(result.movedTexts))} text file(s) ➔ ${pc.bold("texts/")}`);
+  log.step(
+    `Moved ${pc.cyan(String(result.movedImages))} image(s) ➔ ${pc.bold("images/")}`,
+  );
+  log.step(
+    `Moved ${pc.cyan(String(result.movedTexts))} text file(s) ➔ ${pc.bold("texts/")}`,
+  );
 
   if (result.pdfKept > 0) {
     log.step(pc.dim(`Kept ${result.pdfKept} PDF(s) at root`));

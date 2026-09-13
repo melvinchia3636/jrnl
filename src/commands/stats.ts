@@ -48,7 +48,8 @@ export function calculateJournalStats(textsDir: string): JournalStats {
     return { file: f, words, characters };
   });
 
-  const averageWordsPerPage = pages.length > 0 ? Math.round(totalWords / pages.length) : 0;
+  const averageWordsPerPage =
+    pages.length > 0 ? Math.round(totalWords / pages.length) : 0;
 
   return {
     pages,
@@ -63,7 +64,7 @@ export type StatsOptions = {
 };
 
 export async function statsCommand(options: StatsOptions = {}): Promise<void> {
-  intro(pc.bgGreen(pc.black(" JRNL — Statistics ")));
+  intro(pc.bgGreen(pc.black(" JRNL - Statistics ")));
 
   const baseDir = getJournalDir(options.dir);
   const textsDir = existsSync(join(baseDir, "texts"))
@@ -81,7 +82,10 @@ export async function statsCommand(options: StatsOptions = {}): Promise<void> {
   }
 
   const pageLines = stats.pages
-    .map((p) => `  ${pc.bold(p.file.padEnd(16))} : ${pc.cyan(String(p.words).padStart(5))} words ${pc.dim(`(${p.characters} chars)`)}`)
+    .map(
+      (p) =>
+        `  ${pc.bold(p.file.padEnd(16))} : ${pc.cyan(String(p.words).padStart(5))} words ${pc.dim(`(${p.characters} chars)`)}`,
+    )
     .join("\n");
 
   const summary = [

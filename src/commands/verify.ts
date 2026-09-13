@@ -10,11 +10,15 @@ export type VerifyOptions = {
   file?: string;
 };
 
-export async function verifyCommand(options: VerifyOptions = {}): Promise<void> {
-  intro(pc.bgCyan(pc.black(" JRNL — Integrity Check ")));
+export async function verifyCommand(
+  options: VerifyOptions = {},
+): Promise<void> {
+  intro(pc.bgCyan(pc.black(" JRNL - Integrity Check ")));
 
   if (!options.file) {
-    log.error("Target .jrnl file path required.\nUsage: jrnl verify <file.jrnl>");
+    log.error(
+      "Target .jrnl file path required.\nUsage: jrnl verify <file.jrnl>",
+    );
     process.exit(1);
   }
 
@@ -40,12 +44,19 @@ export async function verifyCommand(options: VerifyOptions = {}): Promise<void> 
   note(checkLines, `Verification: ${basename(filePath)}`);
 
   if (!parsed.manifestValid || !parsed.bodyValid) {
-    log.error(pc.red("Integrity verification FAILED. Container is corrupt or tampered."));
+    log.error(
+      pc.red(
+        "Integrity verification FAILED. Container is corrupt or tampered.",
+      ),
+    );
     process.exit(1);
   }
 
   try {
-    const manifestObj = JSON.parse(parsed.manifest.toString("utf8")) as Record<string, unknown>;
+    const manifestObj = JSON.parse(parsed.manifest.toString("utf8")) as Record<
+      string,
+      unknown
+    >;
     const metadataLines = [
       `  ${pc.bold("Volume")}     : ${pc.cyan(`#${manifestObj.volume ?? "N/A"}`)}`,
       `  ${pc.bold("Date Range")} : ${pc.yellow(`${manifestObj.startDate ?? "?"} → ${manifestObj.endDate ?? "?"}`)}`,

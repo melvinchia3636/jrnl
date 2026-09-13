@@ -1,15 +1,18 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { spawn } from "node:child_process";
 import { basename, dirname, join } from "node:path";
 import { filesize } from "filesize";
 import { intro, outro, spinner, note, log } from "@clack/prompts";
 import pc from "picocolors";
 import { getJournalDir, resolvePath } from "../config";
-import {
-  createJrnlPackage,
-  encryptAesGcm,
-  sha256,
-} from "../utils/crypto";
+import { createJrnlPackage, encryptAesGcm, sha256 } from "../utils/crypto";
 import { scanSpineWithWebcam } from "../utils/webcam";
 
 export type PackOptions = {
@@ -18,7 +21,7 @@ export type PackOptions = {
 };
 
 export async function packCommand(options: PackOptions = {}): Promise<void> {
-  intro(pc.bgYellow(pc.black(" JRNL — Pack & Encrypt ")));
+  intro(pc.bgYellow(pc.black(" JRNL - Pack & Encrypt ")));
 
   const dir = getJournalDir(options.dir);
   const manifestPath = join(dir, "manifest.json");
@@ -52,7 +55,10 @@ export async function packCommand(options: PackOptions = {}): Promise<void> {
     endDate: spine.endDate,
   };
 
-  const manifestBuffer = Buffer.from(JSON.stringify(manifestObj, null, 2) + "\n", "utf8");
+  const manifestBuffer = Buffer.from(
+    JSON.stringify(manifestObj, null, 2) + "\n",
+    "utf8",
+  );
   writeFileSync(manifestPath, manifestBuffer);
 
   const tmpDir = join(dir, ".jrnl_tmp");
@@ -96,7 +102,9 @@ export async function packCommand(options: PackOptions = {}): Promise<void> {
   });
 
   const rawTarStat = statSync(tarPath);
-  s.message(`Encrypting ${pc.cyan(filesize(rawTarStat.size))} archive with AES-256-GCM...`);
+  s.message(
+    `Encrypting ${pc.cyan(filesize(rawTarStat.size))} archive with AES-256-GCM...`,
+  );
 
   // Yield a tick so spinner renders the new message smoothly
   await new Promise((r) => setTimeout(r, 50));
@@ -110,12 +118,18 @@ export async function packCommand(options: PackOptions = {}): Promise<void> {
   const jrnlBuffer = createJrnlPackage(manifestBuffer, encryptedBodyBuffer);
 
   const defaultFileName = `JRNL-VOL-${String(spine.volume).padStart(2, "0")}.jrnl`;
-  const outPath = options.out ? resolvePath(options.out) : join(dirname(dir), defaultFileName);
+  const outPath = options.out
+    ? resolvePath(options.out)
+    : join(dirname(dir), defaultFileName);
 
   writeFileSync(outPath, jrnlBuffer);
   rmSync(tmpDir, { recursive: true, force: true });
 
-  s.stop(pc.green(`Archive encrypted and sealed (${pc.bold(filesize(jrnlBuffer.length))})`));
+  s.stop(
+    pc.green(
+      `Archive encrypted and sealed (${pc.bold(filesize(jrnlBuffer.length))})`,
+    ),
+  );
 
   const manifestHash = sha256(manifestBuffer).toString("hex");
   const tarHash = sha256(encryptedBodyBuffer).toString("hex");

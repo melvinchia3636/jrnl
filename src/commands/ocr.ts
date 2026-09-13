@@ -55,16 +55,17 @@ export type OcrOptions = {
 };
 
 export async function ocrCommand(options: OcrOptions = {}): Promise<void> {
-  intro(pc.bgMagenta(pc.black(" JRNL — OCR Transcriber ")));
+  intro(pc.bgMagenta(pc.black(" JRNL - OCR Transcriber ")));
 
   const apiKey = getGeminiApiKey();
   const client = new GoogleGenAI({ apiKey });
 
   const baseDir = getJournalDir(options.dir);
   const imagesSubDir = join(baseDir, "images");
-  const sourceDir = existsSync(imagesSubDir) && statSync(imagesSubDir).isDirectory()
-    ? imagesSubDir
-    : baseDir;
+  const sourceDir =
+    existsSync(imagesSubDir) && statSync(imagesSubDir).isDirectory()
+      ? imagesSubDir
+      : baseDir;
 
   const validImageExts = [".png", ".jpg", ".jpeg", ".webp"];
   const imageFiles = readdirSync(sourceDir)
@@ -89,7 +90,9 @@ export async function ocrCommand(options: OcrOptions = {}): Promise<void> {
   const workDir = join(baseDir, ".ocr_work");
   mkdirSync(workDir, { recursive: true });
 
-  log.info(`Found ${pc.bold(String(imageFiles.length))} image(s) in ${pc.dim(sourceDir)}`);
+  log.info(
+    `Found ${pc.bold(String(imageFiles.length))} image(s) in ${pc.dim(sourceDir)}`,
+  );
 
   const s = spinner();
   let processed = 0;
@@ -112,7 +115,11 @@ export async function ocrCommand(options: OcrOptions = {}): Promise<void> {
     if (existingTxtPath && !options.force) {
       const existingText = readFileSync(existingTxtPath, "utf8");
       if (existingText.trim().length > 0) {
-        log.step(pc.dim(`[${index}/${imageFiles.length}] Skipped ${file} (already transcribed)`));
+        log.step(
+          pc.dim(
+            `[${index}/${imageFiles.length}] Skipped ${file} (already transcribed)`,
+          ),
+        );
         continue;
       }
     }
@@ -150,7 +157,11 @@ export async function ocrCommand(options: OcrOptions = {}): Promise<void> {
 
       const text = response.text ?? "";
       writeFileSync(txtPath, text, "utf8");
-      s.stop(pc.green(`[${index}/${imageFiles.length}] Transcribed ${pc.bold(file)} (${text.length} chars)`));
+      s.stop(
+        pc.green(
+          `[${index}/${imageFiles.length}] Transcribed ${pc.bold(file)} (${text.length} chars)`,
+        ),
+      );
       processed++;
     } catch (e) {
       writeFileSync(txtPath, "", "utf8");

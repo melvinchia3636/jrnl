@@ -11,7 +11,7 @@ import { unpackCommand } from "./commands/unpack";
 import { verifyCommand } from "./commands/verify";
 
 function printHelp(): void {
-  intro(pc.bgCyan(pc.black(" JRNL — Journal Scanner & Archival Suite ")));
+  intro(pc.bgCyan(pc.black(" JRNL - Journal Scanner & Archival Suite ")));
 
   const usageText = [
     `${pc.bold("Usage:")} jrnl <command> [directory|file] [options]`,
@@ -41,14 +41,23 @@ function printHelp(): void {
   ].join("\n");
 
   note(usageText, "Command & Options Reference");
-  outro(pc.dim("Set GEMINI_API_KEY, SSH_HOST, SSH_PASS, and JOURNAL_DIR in .env for fast workflows."));
+  outro(
+    pc.dim(
+      "Set GEMINI_API_KEY, SSH_HOST, SSH_PASS, and JOURNAL_DIR in .env for fast workflows.",
+    ),
+  );
 }
 
 export async function runCli(): Promise<void> {
   const args = process.argv.slice(2);
   const command = args[0];
 
-  if (!command || command === "--help" || command === "-h" || command === "help") {
+  if (
+    !command ||
+    command === "--help" ||
+    command === "-h" ||
+    command === "help"
+  ) {
     printHelp();
     return;
   }
@@ -117,7 +126,9 @@ export async function runCli(): Promise<void> {
         });
         break;
       default:
-        log.error(`Unknown command: "${command}"\nRun 'jrnl help' for available commands.`);
+        log.error(
+          `Unknown command: "${command}"\nRun 'jrnl help' for available commands.`,
+        );
         process.exit(1);
     }
   } catch (error) {

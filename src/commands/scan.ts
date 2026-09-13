@@ -31,7 +31,7 @@ export type ScanOptions = {
 };
 
 export async function scanCommand(options: ScanOptions = {}): Promise<void> {
-  intro(pc.bgCyan(pc.black(" JRNL — Scanner ")));
+  intro(pc.bgCyan(pc.black(" JRNL - Scanner ")));
 
   const host = getSshHost(options.host);
   const pass = getSshPassword(options.pass);
@@ -44,7 +44,9 @@ export async function scanCommand(options: ScanOptions = {}): Promise<void> {
   const reachable = await isHostReachable(host, 22, 3000);
   if (!reachable) {
     s.stop(pc.red(`Host ${hostname} is unreachable on port 22.`));
-    log.error("Please verify the Raspberry Pi is powered on and on the same network.");
+    log.error(
+      "Please verify the Raspberry Pi is powered on and on the same network.",
+    );
     process.exit(1);
   }
 

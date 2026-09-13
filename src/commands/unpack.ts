@@ -1,4 +1,10 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { spawn } from "node:child_process";
 import { basename, join } from "node:path";
 import { filesize } from "filesize";
@@ -14,11 +20,15 @@ export type UnpackOptions = {
   key?: string;
 };
 
-export async function unpackCommand(options: UnpackOptions = {}): Promise<void> {
-  intro(pc.bgMagenta(pc.black(" JRNL — Unpack & Decrypt ")));
+export async function unpackCommand(
+  options: UnpackOptions = {},
+): Promise<void> {
+  intro(pc.bgMagenta(pc.black(" JRNL - Unpack & Decrypt ")));
 
   if (!options.file) {
-    log.error("Target .jrnl file path required.\nUsage: jrnl unpack <file.jrnl> [--key <key>] [--out <dir>]");
+    log.error(
+      "Target .jrnl file path required.\nUsage: jrnl unpack <file.jrnl> [--key <key>] [--out <dir>]",
+    );
     process.exit(1);
   }
 
@@ -48,7 +58,10 @@ export async function unpackCommand(options: UnpackOptions = {}): Promise<void> 
   }
 
   try {
-    const manifestObj = JSON.parse(parsed.manifest.toString("utf8")) as Record<string, unknown>;
+    const manifestObj = JSON.parse(parsed.manifest.toString("utf8")) as Record<
+      string,
+      unknown
+    >;
     const metadataLines = [
       `  ${pc.bold("Volume")}     : ${pc.cyan(`#${manifestObj.volume ?? "N/A"}`)}`,
       `  ${pc.bold("Date Range")} : ${pc.yellow(`${manifestObj.startDate ?? "?"} → ${manifestObj.endDate ?? "?"}`)}`,
@@ -62,7 +75,9 @@ export async function unpackCommand(options: UnpackOptions = {}): Promise<void> 
   let decryptionKey = options.key;
 
   if (!decryptionKey) {
-    s.start("Archive is encrypted. Please hold the journal spine to the webcam...");
+    s.start(
+      "Archive is encrypted. Please hold the journal spine to the webcam...",
+    );
     try {
       const spine = await scanSpineWithWebcam();
       decryptionKey = spine.key;
@@ -74,7 +89,9 @@ export async function unpackCommand(options: UnpackOptions = {}): Promise<void> 
     }
   }
 
-  s.start(`Decrypting ${pc.cyan(filesize(parsed.body.length))} payload with AES-256-GCM...`);
+  s.start(
+    `Decrypting ${pc.cyan(filesize(parsed.body.length))} payload with AES-256-GCM...`,
+  );
   await new Promise((r) => setTimeout(r, 40));
 
   let bodyTarBuffer: Buffer;
@@ -97,7 +114,9 @@ export async function unpackCommand(options: UnpackOptions = {}): Promise<void> 
   s.message("Extracting archive files...");
 
   await new Promise<void>((resolve, reject) => {
-    const proc = spawn("tar", ["-xzf", bodyPath, "-C", outDir], { stdio: "ignore" });
+    const proc = spawn("tar", ["-xzf", bodyPath, "-C", outDir], {
+      stdio: "ignore",
+    });
     proc.on("close", (code) => {
       if (code === 0) resolve();
       else reject(new Error(`Extracting tar.gz failed with code ${code}`));
@@ -111,7 +130,11 @@ export async function unpackCommand(options: UnpackOptions = {}): Promise<void> 
   });
 
   rmSync(bodyPath, { force: true });
-  s.stop(pc.green(`Payload decrypted and extracted (${pc.bold(filesize(bodyTarBuffer.length))})`));
+  s.stop(
+    pc.green(
+      `Payload decrypted and extracted (${pc.bold(filesize(bodyTarBuffer.length))})`,
+    ),
+  );
 
   log.success(`Extracted files to: ${pc.cyan(outDir)}`);
   outro(pc.green("Journal successfully unpacked!"));
