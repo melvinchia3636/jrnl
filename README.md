@@ -5,9 +5,13 @@
 
 ## 🤔 The Problem
 
-Archiving physical handwritten journals into digital formats usually involves fragmented workflows: manual scanner software on remote devices, disconnected OCR scripts, tedious folder organization, and unencrypted file storage without long-term bit rot verification or disaster recovery guarantees.
+> Note: The following problem statement is written by a human, a.k.a. the author himself.
+
+I started writing journals in physical notebooks, and I need a way to preserve them safely in a digital format. I have a printer, but it can only be accessed on some devices, not the current MacBook Air that I'm using, which doesn't support the printer's outdated driver. So I can only use my Raspberry Pi to connect to the printer and access the scanner via SSH on my laptop. This is a repetitive and tedious task, so I need a way to streamline the entire process.
 
 ## 💡 The Solution
+
+This is when the nerdy parts of a programmer come into play.
 
 `jrnl` provides a consolidated, low-maintenance CLI suite tailored for seamless physical journal preservation:
 
