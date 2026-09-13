@@ -11,13 +11,16 @@ Archiving physical handwritten journals into digital formats usually involves fr
 
 `jrnl` provides a consolidated, low-maintenance CLI suite tailored for seamless physical journal preservation:
 
-- **Remote Hardware Scanning (`jrnl scan`)**: Scans pages over SSH via `scanimage`, auto-increments page filenames (`JRNL-0001.png`), and auto-rotates images with ImageMagick.
-- **AI OCR Transcription (`jrnl ocr`)**: Batch transcribes handwritten pages using Gemini (`gemini-3.5-flash-lite`) with automatic skip logic for existing transcriptions.
-- **Automated Organization (`jrnl group`)**: Sorts raw scans and transcriptions cleanly into `images/` and `texts/` folders.
-- **Volume Statistics (`jrnl stats`)**: Calculates per-page word counts, character totals, and aggregate volume metrics.
-- **Hardware-Keyed Encryption (`jrnl pack`)**: Scans 2D Data Matrix codes printed on the physical book spine via native Mac webcam and Apple Vision, generates lean manifests, and encrypts archives with **AES-256-GCM**.
-- **Cold Storage Integrity Verification (`jrnl verify`)**: Validates SHA-256 checksums and reads metadata without needing decryption keys or webcam hardware.
-- **Zero-Dependency Emergency Recovery**: Ships with standalone, offline disaster recovery tools in Python ([`recover.py`](./src/recovery/recover.py)) and browser HTML5 WebCrypto ([`recover.html`](./src/recovery/recover.html)).
+| Command | Action | Description |
+| :--- | :--- | :--- |
+| `jrnl scan` | **Remote Hardware Scanning** | Scans pages over SSH via `scanimage`, auto-increments page filenames (`JRNL-0001.png`), and auto-rotates images with ImageMagick. |
+| `jrnl ocr` | **AI OCR Transcription** | Batch transcribes handwritten pages using Gemini (`gemini-3.5-flash-lite`) with automatic skip logic for existing transcriptions. |
+| `jrnl group` | **Automated Organization** | Sorts raw scans and transcriptions cleanly into `images/` and `texts/` folders. |
+| `jrnl stats` | **Volume Statistics** | Calculates per-page word counts, character totals, and aggregate volume metrics. |
+| `jrnl pack` | **Hardware-Keyed Encryption** | Scans 2D Data Matrix codes on the physical spine via webcam and Apple Vision, generates lean manifests, and encrypts archives with **AES-256-GCM**. |
+| `jrnl verify` | **Integrity Verification** | Validates SHA-256 checksums and reads metadata without needing decryption keys or webcam hardware. |
+| `jrnl unpack` | **Decryption & Extraction** | Decrypts and extracts `.jrnl` packages back to their original folder hierarchy. |
+| `recover.py` / `recover.html` | **Disaster Recovery** | Standalone, zero-dependency offline recovery tools in Python and browser HTML5 WebCrypto. |
 
 ## 🖥 Screenshots
 
