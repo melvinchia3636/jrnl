@@ -35,18 +35,32 @@
       margin-bottom: 20px;
     }
     .dropzone {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       border: 1px dashed #27272a;
       border-radius: 8px;
-      padding: 28px 16px;
+      padding: 32px 16px;
       text-align: center;
       cursor: pointer;
       font-size: 13px;
       color: #a1a1aa;
       margin-bottom: 16px;
+      overflow: hidden;
     }
-    .dropzone:hover {
-      border-color: #52525b;
+    .dropzone:hover, .dropzone.dragover {
+      border-color: #71717a;
       color: #fafafa;
+    }
+    .dropzone input[type="file"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
     }
     .input-group {
       margin-bottom: 16px;
@@ -124,7 +138,7 @@
 
     <div class="dropzone" id="dropzone">
       <span id="dropzoneText">Click or drop a <code>.jrnl</code> file here</span>
-      <input type="file" id="fileInput" accept=".jrnl" style="display:none">
+      <input type="file" id="fileInput" accept=".jrnl">
     </div>
 
     <div class="input-group" id="keyGroup" style="display:none;">
@@ -152,18 +166,19 @@
     const statusArea = document.getElementById("statusArea");
     const resultArea = document.getElementById("resultArea");
 
-    dropzone.addEventListener("click", () => fileInput.click());
-    fileInput.addEventListener("change", (e) => handleFile(e.target.files[0]));
-    dropzone.addEventListener("dragover", (e) => { e.preventDefault(); dropzone.style.borderColor = "#71717a"; });
-    dropzone.addEventListener("dragleave", () => { dropzone.style.borderColor = "#27272a"; });
-    dropzone.addEventListener("drop", (e) => {
-      e.preventDefault();
-      dropzone.style.borderColor = "#27272a";
-      if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    fileInput.addEventListener("change", (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        handleFile(e.target.files[0]);
+      }
     });
 
+    fileInput.addEventListener("dragenter", () => dropzone.classList.add("dragover"));
+    fileInput.addEventListener("dragover", () => dropzone.classList.add("dragover"));
+    fileInput.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+    fileInput.addEventListener("drop", () => dropzone.classList.remove("dragover"));
+
     keyInput.addEventListener("input", () => {
-      decryptBtn.disabled = !keyInput.value.trim() && parsedContainer?.isEncrypted;
+      decryptBtn.disabled = !keyInput.value.trim();
       resultArea.style.display = "none";
       resultArea.innerHTML = "";
     });
@@ -197,16 +212,23 @@
         resultArea.innerHTML = "";
 
         if (fileBuffer.length < 48) throw new Error("File is too small.");
-        const magic = fileBuffer.slice(0, 8);
-        const magicStr = String.fromCharCode(...magic.slice(0, 4));
-        if (magicStr !== "JRNL" || magic[5] !== 1 || magic[7] !== 1) throw new Error("Invalid header signature.");
+        
+        // Match JRNL\x00\x01\x00\x01 exactly
+        const expectedMagic = [74, 82, 78, 76, 0, 1, 0, 1]; // "JRNL\x00\x01\x00\x01"
+        const isMagicValid = expectedMagic.every((byte, idx) => fileBuffer[idx] === byte);
+        if (!isMagicValid) {
+          throw new Error("Invalid .jrnl file: bad magic header.");
+        }
 
         // Manifest
         const manifestHash = fileBuffer.slice(8, 40);
         const view = new DataView(fileBuffer.buffer, fileBuffer.byteOffset, fileBuffer.byteLength);
         const b64len = view.getUint32(40, false);
         const manifestB64Bytes = fileBuffer.slice(44, 44 + b64len);
-        const manifestB64 = new TextDecoder("latin1").decode(manifestB64Bytes);
+        let manifestB64 = "";
+        for (let i = 0; i < manifestB64Bytes.length; i++) {
+          manifestB64 += String.fromCharCode(manifestB64Bytes[i]);
+        }
         const manifestJsonStr = atob(manifestB64);
         const manifestBytes = new TextEncoder().encode(manifestJsonStr);
 
@@ -252,26 +274,24 @@
         const keyStr = keyInput.value.trim();
         if (!keyStr) throw new Error("Please enter key.");
 
-          const keyHash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(keyStr));
-          const cryptoKey = await crypto.subtle.importKey("raw", keyHash, { name: "AES-GCM" }, false, ["decrypt"]);
+        const keyHash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(keyStr));
+        const cryptoKey = await crypto.subtle.importKey("raw", keyHash, { name: "AES-GCM" }, false, ["decrypt"]);
 
-          const iv = parsedContainer.body.slice(0, 12);
-          const tag = parsedContainer.body.slice(12, 28);
-          const ciphertext = parsedContainer.body.slice(28);
+        const iv = parsedContainer.body.slice(0, 12);
+        const tag = parsedContainer.body.slice(12, 28);
+        const ciphertext = parsedContainer.body.slice(28);
 
-          const combined = new Uint8Array(ciphertext.length + tag.length);
-          combined.set(ciphertext, 0);
-          combined.set(tag, ciphertext.length);
+        const combined = new Uint8Array(ciphertext.length + tag.length);
+        combined.set(ciphertext, 0);
+        combined.set(tag, ciphertext.length);
 
-          const decryptedBuffer = await crypto.subtle.decrypt(
-            { name: "AES-GCM", iv: iv, tagLength: 128 },
-            cryptoKey,
-            combined
-          );
+        const decryptedBuffer = await crypto.subtle.decrypt(
+          { name: "AES-GCM", iv: iv, tagLength: 128 },
+          cryptoKey,
+          combined
+        );
 
-          rawTarBytes = new Uint8Array(decryptedBuffer);
-        }
-
+        const rawTarBytes = new Uint8Array(decryptedBuffer);
         const blob = new Blob([rawTarBytes], { type: "application/gzip" });
         const url = URL.createObjectURL(blob);
         const defaultOutName = fileName.replace(".jrnl", ".tar.gz");
