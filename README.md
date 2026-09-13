@@ -22,17 +22,15 @@ Archiving physical handwritten journals into digital formats usually involves fr
 ## 🖥 Screenshots
 
 <div align="center">
-  <img width="49%" alt="CLI Interface" src="https://via.placeholder.com/600x400?text=jrnl+CLI+Interface" />
-  <img width="49%" alt="Recovery Tool" src="https://via.placeholder.com/600x400?text=Emergency+Web+Recovery" />
+  <img width="49%" alt="image" src="https://github.com/user-attachments/assets/f1ebdacb-9e6a-4201-aaba-be9768cdd724" />
+  <img width="49%" alt="image" src="https://github.com/user-attachments/assets/7baba574-fe57-4cb7-828b-bcd712f65c6e" />
 </div>
 
 ## 🔬 Technologies Used
 
 ![TypeScript](https://img.shields.io/badge/-TYPESCRIPT-FF0000?style=for-the-badge&logo=typescript&logoColor=white&color=3178C6)
-![Bun](https://img.shields.io/badge/-BUN-FF0000?style=for-the-badge&logo=bun&logoColor=white&color=FBF0DF&logoColor=black)
 ![Google Gemini](https://img.shields.io/badge/-GOOGLE_GEMINI-FF0000?style=for-the-badge&logo=googlegemini&logoColor=white&color=8E75B2)
 ![Swift](https://img.shields.io/badge/-SWIFT-FF0000?style=for-the-badge&logo=swift&logoColor=white&color=F05138)
-![OpenSSL](https://img.shields.io/badge/-AES_256_GCM-FF0000?style=for-the-badge&logo=lock&logoColor=white&color=09090B)
 
 ## ⌨️ Setup
 
