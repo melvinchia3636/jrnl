@@ -7,7 +7,7 @@
 
 > Note: The following problem statement is written by a human, a.k.a. the author himself.
 
-I started writing journals in physical notebooks, and I need a way to preserve them safely in a digital format. I have a printer, but it can only be accessed on some devices, not the current MacBook Air that I'm using, which doesn't support the printer's outdated driver. So I can only use my Raspberry Pi to connect to the printer and access the scanner via SSH on my laptop. This is a repetitive and tedious task, so I need a way to streamline the entire process.
+I started writing journals in physical notebooks, and I need a way to preserve and archive them safely in a digital format. I have a printer that can be used as a scanner that yields extremely high-quality results, but it can only be accessed on all devices but not the current MacBook Air that I'm using, which doesn't support the printer's outdated driver. So I can only use my Raspberry Pi to connect to the printer and access the scanner via SSH on my laptop. This is a repetitive and tedious task, so I need a way to streamline the entire process.
 
 ## 💡 The Solution
 
