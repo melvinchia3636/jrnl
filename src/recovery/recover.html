@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JRNL Recovery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #09090b;
+      color: #fafafa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .container {
+      width: 100%;
+      max-width: 520px;
+    }
+    h1 {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+    }
+    p.desc {
+      color: #71717a;
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+    .dropzone {
+      border: 1px dashed #27272a;
+      border-radius: 8px;
+      padding: 28px 16px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 13px;
+      color: #a1a1aa;
+      margin-bottom: 16px;
+    }
+    .dropzone:hover {
+      border-color: #52525b;
+      color: #fafafa;
+    }
+    .input-group {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      color: #71717a;
+      margin-bottom: 6px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid #27272a;
+      background: #18181b;
+      color: #fafafa;
+      font-size: 13px;
+      font-family: monospace;
+      outline: none;
+    }
+    input:focus {
+      border-color: #71717a;
+    }
+    button, .btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #fafafa;
+      background: #fafafa;
+      color: #09090b;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+      text-align: center;
+      font-family: inherit;
+    }
+    button:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    .report {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #27272a;
+      background: #18181b;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    pre {
+      background: #09090b;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #27272a;
+      overflow-x: auto;
+      margin-top: 8px;
+      font-size: 11px;
+      color: #a1a1aa;
+      font-family: monospace;
+    }
+    .error {
+      color: #a1a1aa;
+      border-left: 2px solid #71717a;
+      padding-left: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>JRNL Recovery</h1>
+    <p class="desc">Offline browser extraction tool for .jrnl packages.</p>
+
+    <div class="dropzone" id="dropzone">
+      <span id="dropzoneText">Click or drop a <code>.jrnl</code> file here</span>
+      <input type="file" id="fileInput" accept=".jrnl" style="display:none">
+    </div>
+
+    <div class="input-group" id="keyGroup" style="display:none;">
+      <label for="keyInput">Spine Encryption Key</label>
+      <input type="text" id="keyInput" placeholder="e.g. XSLCGOMI041IQNUY" autocomplete="off">
+    </div>
+
+    <button id="decryptBtn" style="display:none;" disabled>Extract Archive</button>
+
+    <div id="statusArea" style="display:none;"></div>
+    <div id="resultArea" style="display:none;"></div>
+  </div>
+
+  <script>
+    let fileBuffer = null;
+    let fileName = "";
+    let parsedContainer = null;
+
+    const dropzone = document.getElementById("dropzone");
+    const fileInput = document.getElementById("fileInput");
+    const dropzoneText = document.getElementById("dropzoneText");
+    const keyGroup = document.getElementById("keyGroup");
+    const keyInput = document.getElementById("keyInput");
+    const decryptBtn = document.getElementById("decryptBtn");
+    const statusArea = document.getElementById("statusArea");
+    const resultArea = document.getElementById("resultArea");
+
+    dropzone.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", (e) => handleFile(e.target.files[0]));
+    dropzone.addEventListener("dragover", (e) => { e.preventDefault(); dropzone.style.borderColor = "#71717a"; });
+    dropzone.addEventListener("dragleave", () => { dropzone.style.borderColor = "#27272a"; });
+    dropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropzone.style.borderColor = "#27272a";
+      if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+
+    keyInput.addEventListener("input", () => {
+      decryptBtn.disabled = !keyInput.value.trim() && parsedContainer?.isEncrypted;
+      resultArea.style.display = "none";
+      resultArea.innerHTML = "";
+    });
+
+    async function sha256(buffer) {
+      const hash = await crypto.subtle.digest("SHA-256", buffer);
+      return new Uint8Array(hash);
+    }
+
+    function compareBytes(a, b) {
+      if (a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+      return true;
+    }
+
+    async function handleFile(file) {
+      if (!file) return;
+      fileName = file.name;
+      dropzoneText.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+      resultArea.style.display = "none";
+      resultArea.innerHTML = "";
+      
+      const arrayBuffer = await file.arrayBuffer();
+      fileBuffer = new Uint8Array(arrayBuffer);
+      await parseContainer();
+    }
+
+    async function parseContainer() {
+      try {
+        resultArea.style.display = "none";
+        resultArea.innerHTML = "";
+
+        if (fileBuffer.length < 48) throw new Error("File is too small.");
+        const magic = fileBuffer.slice(0, 8);
+        const magicStr = String.fromCharCode(...magic.slice(0, 4));
+        if (magicStr !== "JRNL" || magic[5] !== 1 || magic[7] !== 1) throw new Error("Invalid header signature.");
+
+        // Manifest
+        const manifestHash = fileBuffer.slice(8, 40);
+        const view = new DataView(fileBuffer.buffer, fileBuffer.byteOffset, fileBuffer.byteLength);
+        const b64len = view.getUint32(40, false);
+        const manifestB64Bytes = fileBuffer.slice(44, 44 + b64len);
+        const manifestB64 = new TextDecoder("latin1").decode(manifestB64Bytes);
+        const manifestJsonStr = atob(manifestB64);
+        const manifestBytes = new TextEncoder().encode(manifestJsonStr);
+
+        const actualManifestHash = await sha256(manifestBytes);
+        const manifestValid = compareBytes(manifestHash, actualManifestHash);
+
+        // Body
+        let off = 44 + b64len;
+        const tarHash = fileBuffer.slice(off, off + 32);
+        off += 32;
+        const bodyLen = Number(view.getBigUint64(off, false));
+        off += 8;
+        const body = fileBuffer.slice(off, off + bodyLen);
+
+        const actualTarHash = await sha256(body);
+        const bodyValid = compareBytes(tarHash, actualTarHash);
+
+        parsedContainer = { manifestJsonStr, manifestValid, bodyValid, body };
+
+        statusArea.style.display = "block";
+        statusArea.innerHTML = `
+          <div class="report">
+            <div><strong>Header:</strong> Valid</div>
+            <div><strong>Manifest SHA-256:</strong> ${manifestValid ? 'Valid' : 'Corrupted'}</div>
+            <div><strong>Payload SHA-256:</strong> ${bodyValid ? 'Valid' : 'Corrupted'}</div>
+            <pre>${manifestJsonStr}</pre>
+          </div>
+        `;
+
+        if (!manifestValid || !bodyValid) throw new Error("Integrity check failed. Archive is corrupt.");
+
+        keyGroup.style.display = "block";
+        decryptBtn.style.display = "block";
+        decryptBtn.disabled = !keyInput.value.trim();
+      } catch (err) {
+        statusArea.style.display = "block";
+        statusArea.innerHTML = `<div class="report error">${err.message}</div>`;
+      }
+    }
+
+    decryptBtn.addEventListener("click", async () => {
+      try {
+        const keyStr = keyInput.value.trim();
+        if (!keyStr) throw new Error("Please enter key.");
+
+          const keyHash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(keyStr));
+          const cryptoKey = await crypto.subtle.importKey("raw", keyHash, { name: "AES-GCM" }, false, ["decrypt"]);
+
+          const iv = parsedContainer.body.slice(0, 12);
+          const tag = parsedContainer.body.slice(12, 28);
+          const ciphertext = parsedContainer.body.slice(28);
+
+          const combined = new Uint8Array(ciphertext.length + tag.length);
+          combined.set(ciphertext, 0);
+          combined.set(tag, ciphertext.length);
+
+          const decryptedBuffer = await crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: iv, tagLength: 128 },
+            cryptoKey,
+            combined
+          );
+
+          rawTarBytes = new Uint8Array(decryptedBuffer);
+        }
+
+        const blob = new Blob([rawTarBytes], { type: "application/gzip" });
+        const url = URL.createObjectURL(blob);
+        const defaultOutName = fileName.replace(".jrnl", ".tar.gz");
+
+        resultArea.style.display = "block";
+        resultArea.innerHTML = `
+          <div class="report" style="margin-top:12px;">
+            <div style="margin-bottom:10px;">Archive decrypted successfully.</div>
+            <a class="btn" href="${url}" download="${defaultOutName}">Download ${defaultOutName}</a>
+          </div>
+        `;
+      } catch (err) {
+        alert("Decryption failed: " + err.message);
+      }
+    });
+  </script>
+</body>
+</html>
